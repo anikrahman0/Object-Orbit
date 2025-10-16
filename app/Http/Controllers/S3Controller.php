@@ -13,12 +13,17 @@ class S3Controller extends Controller
 {
     public function storageList()
     {
-        // $r = Storage::disk('s3')->directories('/');
-        // dd($r);
+        // $r = Storage::disk('do_spaces')->files('media/bangla/imgAll/2025October');
+        // Storage::disk('do_spaces')->makeDirectory('somoytv/media/bangla');
+        // Storage::disk('do_spaces')->makeDirectory('somoytv/media/english');
+
+        // $directories = Storage::disk('do_spaces')->allDirectories();
+        // dd($r, $directories);
         return view('storage.index', [
             'storages' => auth()->user()->storageConnection()->paginate(10),
         ]);
     }
+
     public function storageCreate()
     {
         return view('storage.create');
