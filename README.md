@@ -28,7 +28,7 @@
 ## Installation
 
 ## 1. Clone the repo:  
-   git clone https://github.com/yourusername/objectorbit.git
+   git clone https://github.com/anikrahman0/Object-Orbit.git
    cd objectorbit
 ## 2. Install Dependencies
 
