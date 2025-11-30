@@ -20,6 +20,8 @@
 
 - **Backend:** Laravel 12  
 - **Frontend:** Tailwind CSS  
+- **Livewire:** Livewire
+- **Flux:** Flux
 - **Storage:** Flysystem (League) with dynamic disks  
 - **Cloud SDK:** AWS SDK for PHP (S3 compatibility)  
 
@@ -29,6 +31,7 @@
 
 ## 1. Clone the repo:  
    git clone https://github.com/anikrahman0/Object-Orbit.git
+   
    cd objectorbit
 ## 2. Install Dependencies
 
