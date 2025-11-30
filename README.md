@@ -28,7 +28,7 @@
 ## Installation
 
 ## 1. Clone the repo:  
-   git clone https://github.com/yourusername/objectorbit.git
+   git clone https://github.com/anikrahman0/Object-Orbit.git
    cd objectorbit
 ## 2. Install Dependencies
 
@@ -51,11 +51,11 @@ Run the following command to migrate the database:
 
 php artisan migrate
 
-## 6. Login & Register
+## 5. Login & Register
 
 Register a new user or log in with your credentials to access the dashboard.
 
-## 7. Connect S3-Compatible Storage
+## 6. Connect S3-Compatible Storage
 
 After login, navigate to the **Storage Connections** section and add your S3-compatible credentials. This includes support for AWS S3, DigitalOcean Spaces, and similar providers.
 
@@ -67,7 +67,7 @@ After login, navigate to the **Storage Connections** section and add your S3-com
 - Bucket  
 - Endpoint  
 
-## 8. Browse Files & Folders
+## 7. Browse Files & Folders
 
 Once a connection is successful, you can:
 
@@ -75,14 +75,14 @@ Once a connection is successful, you can:
 - View images and files
 - Navigate through directories like a file manager
 
-## 9. Folder & File Management
+## 8. Folder & File Management
 
 - Create new folders inside any path
 - Navigate via breadcrumbs
 - Delete folders/files with confirmation
 - (Coming soon) Select multiple items for batch operations
 
-## 10. Contact
+## 9. Contact
 
 For support or suggestions, please reach out to:
 
