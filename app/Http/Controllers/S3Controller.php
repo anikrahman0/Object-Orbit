@@ -13,8 +13,6 @@ class S3Controller extends Controller
 {
     public function storageList()
     {
-        // $r = Storage::disk('s3')->directories('/');
-        // dd($r);
         return view('storage.index', [
             'storages' => auth()->user()->storageConnection()->paginate(10),
         ]);
@@ -46,6 +44,48 @@ class S3Controller extends Controller
         return to_route('storage.list')->with('success', 'Storage connection saved!');
     }
 
+    public function storageEdit($id)
+    {
+        $storage = auth()->user()->storageConnection()->findOrFail($id);
+        return view('storage.edit', compact('storage'));
+    }
+
+    public function storageUpdate(Request $request, $id)
+    {
+        $storage = auth()->user()->storageConnection()->findOrFail($id);
+
+        $data = $request->validate([
+            'key' => 'required|string|max:255|unique:storage_connections,key,' . $storage->id,
+            'secret' => 'required|string|max:60000|unique:storage_connections,secret,' . $storage->id,
+            'region' => 'required|string|max:20',
+            'bucket' => 'required|string|max:100',
+            'endpoint' => 'nullable|url|max:255',
+            'use_path_style' => 'nullable',
+        ]);
+
+        $storage->update([
+            'key' => $data['key'],
+            'secret' => $data['secret'],
+            'region' => $data['region'],
+            'bucket' => $data['bucket'],
+            'endpoint' => $data['endpoint'] ?? null,
+            'use_path_style' => $request->has('use_path_style'),
+        ]);
+
+        return to_route('storage.list')->with('success', 'Storage connection updated!');
+    }
+
+    public function storageDelete($id)
+    {
+        $storage = auth()->user()->storageConnection()->findOrFail($id);
+
+        // Soft delete
+        $storage->delete();
+
+        return to_route('storage.list')->with('success', 'Storage connection deleted!');
+    }
+
+
 
 
     public function storageConnect($id, StorageConnectionService $service)
@@ -54,26 +94,28 @@ class S3Controller extends Controller
 
         $service->registerDisk($connection->toArray(), 'connected_storage');
 
-        // Get path from query param or default to root
         $path = request()->query('path', '/');
         $disk = Storage::disk('connected_storage');
 
         try {
-            // Get raw directories and files
             $rawFolders = $disk->directories($path);
             $files = $disk->files($path);
 
-            // Normalize path prefix
             $prefix = trim($path, '/') !== '' ? trim($path, '/') . '/' : '';
 
-            // Extract only immediate child folders
             $folders = collect($rawFolders)->map(function ($folder) use ($prefix) {
                 return trim(Str::after($folder, $prefix), '/');
             })->filter(function ($folder) {
                 return !str_contains($folder, '/'); // Only direct folders
             })->unique()->values();
 
-            return view('storage.folders', compact('folders', 'files', 'path', 'connection'));
+            return view('storage.folders', [
+                'folders' => $folders,
+                'files' => $files,
+                'path' => $path,
+                'connection' => $connection,
+                'connectionError' => null, // No error
+            ]);
         } catch (\Exception $e) {
             Log::error('S3 connection failed: ' . $e->getMessage());
 
@@ -82,9 +124,11 @@ class S3Controller extends Controller
                 'files' => collect(),
                 'path' => $path,
                 'connection' => $connection,
-            ])->withErrors('Connection failed: ' . $e->getMessage());
+                'connectionError' => 'Connection failed: ' . $e->getMessage(), // Pass error
+            ]);
         }
     }
+
 
     public function deleteMultipleFolders($id, Request $request, StorageConnectionService $service)
     {

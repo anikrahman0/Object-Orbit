@@ -26,7 +26,7 @@
             </flux:navlist>
             <flux:navlist variant="outline">
                 <flux:navlist.item icon="plus" :href="route('storage.create')" target="_blank" wire:navigate>
-                    Add New Storage
+                    Add Storage Connection
                 </flux:navlist.item>
             </flux:navlist>
 
