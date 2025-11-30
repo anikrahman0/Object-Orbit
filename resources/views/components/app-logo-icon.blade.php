@@ -7,4 +7,4 @@
     />
 </svg> --}}
 
-<img src="{{ asset('orbit-main.png') }}" alt="">
+<img src="{{ asset('orbit-main.png') }}" class="w-auto h-auto" alt="">

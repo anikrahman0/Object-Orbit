@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('bucket');
             $table->string('endpoint')->nullable();
             $table->boolean('use_path_style')->default(false);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

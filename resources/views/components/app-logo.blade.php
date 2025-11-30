@@ -1,4 +1,4 @@
-<div class="flex flex-4 mt-3 mb-2 size-8 items-center justify-center rounded-md bg-accent-content text-accent-foreground">
+<div class="flex mt-3 mb-2 items-center justify-center rounded-md bg-accent-content text-accent-foreground">
     <x-app-logo-icon class="fill-current text-white dark:text-black" />
 </div>
 {{-- <div class="ms-1 grid flex-1 text-start text-sm">
