@@ -25,13 +25,7 @@ class S3Controller extends Controller
     public function storageStore(Request $request)
     {
         $data = $request->validate([
-            'key' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('storage_connections', 'key')
-                    ->where('user_id', auth()->id()),
-            ],
+            'key' => 'required|string|max:255',
             'secret' => 'required|string|max:60000',
             'region' => 'required|string|max:20',
             'bucket' => 'required|string|max:100',
@@ -60,15 +54,8 @@ class S3Controller extends Controller
         $storage = auth()->user()->storageConnection()->findOrFail($id);
 
         $data = $request->validate([
-            'key' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('storage_connections', 'key')
-                    ->where('user_id', auth()->id())
-                    ->ignore($storage->id),
-            ],
-            'secret' => 'required|string|max:60000',
+            'key' => 'required|string|max:255|unique:storage_connections,key,' . $storage->id,
+            'secret' => 'required|string|max:60000|unique:storage_connections,secret,' . $storage->id,
             'region' => 'required|string|max:20',
             'bucket' => 'required|string|max:100',
             'endpoint' => 'nullable|url|max:255',
