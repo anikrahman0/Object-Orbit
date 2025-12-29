@@ -139,5 +139,10 @@
         {{ $slot }}
 
         @fluxScripts
+        {{-- / Flux Scripts for production --}}
+        {{-- <script
+            src="{{ asset('flux/flux.js') }}"
+            defer
+        ></script> --}}
     </body>
 </html>
