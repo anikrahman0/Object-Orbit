@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use App\Services\StorageConnectionService;
@@ -24,8 +25,8 @@ class S3Controller extends Controller
     public function storageStore(Request $request)
     {
         $data = $request->validate([
-            'key' => 'required|string|max:255|unique:storage_connections,key',
-            'secret' => 'required|string|max:60000|unique:storage_connections,secret',
+            'key' => 'required|string|max:255',
+            'secret' => 'required|string|max:60000',
             'region' => 'required|string|max:20',
             'bucket' => 'required|string|max:100',
             'endpoint' => 'nullable|url|max:255',
@@ -33,16 +34,14 @@ class S3Controller extends Controller
         ]);
 
         auth()->user()->storageConnection()->create([
-            'key' => $data['key'],
-            'secret' => $data['secret'],
-            'region' => $data['region'],
-            'bucket' => $data['bucket'],
+            ...$data,
             'endpoint' => $data['endpoint'] ?? null,
-            'use_path_style' => $request->has('use_path_style'),
+            'use_path_style' => $request->boolean('use_path_style'),
         ]);
 
         return to_route('storage.list')->with('success', 'Storage connection saved!');
     }
+
 
     public function storageEdit($id)
     {
@@ -64,16 +63,14 @@ class S3Controller extends Controller
         ]);
 
         $storage->update([
-            'key' => $data['key'],
-            'secret' => $data['secret'],
-            'region' => $data['region'],
-            'bucket' => $data['bucket'],
+            ...$data,
             'endpoint' => $data['endpoint'] ?? null,
-            'use_path_style' => $request->has('use_path_style'),
+            'use_path_style' => $request->boolean('use_path_style'),
         ]);
 
         return to_route('storage.list')->with('success', 'Storage connection updated!');
     }
+
 
     public function storageDelete($id)
     {
