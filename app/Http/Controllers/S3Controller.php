@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-
+use App\Http\Requests\StorageConnectionRequest;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -22,25 +22,17 @@ class S3Controller extends Controller
     {
         return view('storage.create');
     }
-    public function storageStore(Request $request)
+    public function storageStore(StorageConnectionRequest $request)
     {
-        $data = $request->validate([
-            'key' => 'required|string|max:255',
-            'secret' => 'required|string|max:60000',
-            'region' => 'required|string|max:20',
-            'bucket' => 'required|string|max:100',
-            'endpoint' => 'nullable|url|max:255',
-            'use_path_style' => 'nullable',
-        ]);
-
         auth()->user()->storageConnection()->create([
-            ...$data,
-            'endpoint' => $data['endpoint'] ?? null,
+            ...$request->validated(),
+            'endpoint' => $request->validated('endpoint'),
             'use_path_style' => $request->boolean('use_path_style'),
         ]);
 
         return to_route('storage.list')->with('success', 'Storage connection saved!');
     }
+
 
 
     public function storageEdit($id)
@@ -49,27 +41,18 @@ class S3Controller extends Controller
         return view('storage.edit', compact('storage'));
     }
 
-    public function storageUpdate(Request $request, $id)
+    public function storageUpdate(StorageConnectionRequest $request, $id)
     {
         $storage = auth()->user()->storageConnection()->findOrFail($id);
 
-        $data = $request->validate([
-            'key' => 'required|string|max:255',
-            'secret' => 'required|string|max:60000',
-            'region' => 'required|string|max:20',
-            'bucket' => 'required|string|max:100',
-            'endpoint' => 'nullable|url|max:255',
-            'use_path_style' => 'nullable',
-        ]);
-
         $storage->update([
-            ...$data,
-            'endpoint' => $data['endpoint'] ?? null,
+            ...$request->validated(),
             'use_path_style' => $request->boolean('use_path_style'),
         ]);
 
         return to_route('storage.list')->with('success', 'Storage connection updated!');
     }
+
 
 
     public function storageDelete($id)
