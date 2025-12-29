@@ -21,6 +21,10 @@ class StorageConnection extends Model
         'use_path_style',
     ];
 
+    protected $casts = [
+        'secret' => 'encrypted',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);
