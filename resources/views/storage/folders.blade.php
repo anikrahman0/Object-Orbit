@@ -89,25 +89,119 @@
                     </button>
                 </form>
             </ul>
-
             @if(!empty($files) && count($files) > 0)
-                <h3 class="font-semibold mb-2">Files</h3>
+                <h3 class="font-semibold mb-3">Files</h3>
             @endif
-            <ul>
-                @forelse($files as $file)
-                    @php
-                        $filePath = rtrim($path, '/') . '/' . basename($file);
-                        // Generate URL to view or download file - adjust as needed
-                        $fileUrl = Storage::disk('connected_storage')->url($filePath);
-                    @endphp
-                    <li class="flex items-center gap-2 border-b-1 border-gray-200 py-2">
-                        <flux:icon name="file" class="w-5 h-5"></flux:icon>
-                        <a href="{{ $fileUrl }}" target="_blank" class="text-gray-700 hover:underline">{{ basename($file) }}</a>
-                    </li>
-                @empty
-                    <p class="flex items-center gap-2 text-zinc-500"><flux:icon name="file-minus" class="w-5 h-5"></flux:icon> <span>Files in this folder are empty. </span></p>
-                @endforelse
-            </ul>
+
+            <div 
+                x-data="fileSelector(@js($files))"
+                @files-deleted.window="clearAll()"
+                class="space-y-3"
+            >
+                <!-- Actions -->
+                @if(!empty($files) && count($files) > 0)
+                    <div class="flex items-center gap-3">
+
+                        <!-- Select / Deselect All -->
+                        <button type="button" @click="toggleSelectAll()" class="inline-flex items-center cursor-pointer">
+                            <flux:badge 
+                                variant="pill" 
+                                icon="user"
+                                x-text="allSelected ? 'Deselect All' : 'Select All'"
+                            ></flux:badge>
+                        </button>
+
+                        <!-- Delete Selected Modal Trigger -->
+                        <flux:modal.trigger 
+                            name="delete-selected" 
+                            x-show="selected.length > 0"
+                            x-cloak
+                        >
+                            <flux:badge
+                                variant="pill" 
+                                color="red"
+                                class="text-sm text-red-600 inline-flex items-center"
+                            >
+                                <flux:icon name="trash" class="w-4 h-4 mr-2"></flux:icon>
+                                Delete Selected (<span x-text="selected.length"></span>)
+                            </flux:badge>
+                        </flux:modal.trigger>
+
+                    </div>
+                @endif
+
+                <!-- File list -->
+                <ul class="divide-y divide-gray-200">
+                    @forelse($files as $file)
+                        @php
+                            $filePath = rtrim($path, '/') . '/' . basename($file);
+                            $fileUrl  = Storage::disk('connected_storage')->url($filePath);
+                        @endphp
+
+                        <li class="flex items-center justify-between py-2">
+                            <div class="flex items-center gap-3">
+
+                                <!-- Flux Checkbox -->
+                                <flux:checkbox
+                                    x-bind:checked="isSelected('{{ $filePath }}')"
+                                    x-on:click="toggle('{{ $filePath }}')"
+                                ></flux:checkbox>
+
+                                <flux:icon name="file" class="w-5 h-5 text-gray-500"/>
+
+                                <a href="{{ $fileUrl }}"
+                                    target="_blank"
+                                    class="text-gray-700 hover:underline text-sm break-words break-all overflow-hidden"
+                                >
+                                    {{ basename($file) }}
+                                </a>
+                            </div>
+                        </li>
+                    @empty
+                        <p class="flex items-center gap-2 text-zinc-500 py-3">
+                            <flux:icon name="file-minus" class="w-5 h-5"/>
+                            <span>Files in this folder are empty.</span>
+                        </p>
+                    @endforelse
+                </ul>
+                <!-- Delete Modal -->
+                <flux:modal name="delete-selected" class="min-w-[22rem]">
+                    <form method="POST" action="{{ route('storage.delete-files', $connection->id) }}">
+                        @csrf
+
+                        <!-- Hidden inputs for selected files -->
+                        <template x-for="file in selected" :key="file">
+                            <input type="hidden" name="files[]" x-for="file in selected" :key="file" :value="file">
+                        </template>
+
+                        <div class="space-y-6">
+                            <div>
+                                <flux:heading size="lg">Delete Selected Files?</flux:heading>
+
+                                <flux:text class="mt-2">
+                                    You're about to delete <strong x-text="selected.length"></strong> file(s).<br>
+                                    This action cannot be reversed.
+                                </flux:text>
+                            </div>
+
+                            <div class="flex gap-2">
+                                <flux:spacer />
+
+                                <flux:modal.close>
+                                    <flux:button variant="ghost" type="button">Cancel</flux:button>
+                                </flux:modal.close>
+
+                                <flux:button 
+                                    variant="danger" 
+                                    type="submit"
+                                >
+                                    Delete
+                                </flux:button>
+                            </div>
+                        </div>
+                    </form>
+                </flux:modal>
+            </div>
         @endif
     </div>
 
@@ -293,7 +387,69 @@ function uploadModal() {
 
     }
 }
+function fileSelector(files = []) {
+    return {
+        files: files,       // all files loaded from backend
+        selected: [],       // selected files
+        allSelected: false, // for toggle select all
 
+        // Toggle single file
+        toggle(file) {
+            if (this.selected.includes(file)) {
+                this.selected = this.selected.filter(f => f !== file);
+            } else {
+                this.selected.push(file);
+            }
+            this.updateAllSelected();
+        },
+
+        // Select / Deselect all files
+        toggleSelectAll() {
+            if (this.allSelected) {
+                this.selected = [];
+                this.allSelected = false;
+            } else {
+                this.selected = [...this.files];
+                this.allSelected = true;
+            }
+        },
+
+        // Clear all selections
+        clearAll() {
+            this.selected = [];
+            this.allSelected = false;
+        },
+
+        // Check if file is selected
+        isSelected(file) {
+            return this.selected.includes(file);
+        },
+
+        // Update the allSelected flag
+        updateAllSelected() {
+            this.allSelected = (this.selected.length === this.files.length && this.files.length > 0);
+        },
+
+        // Optional: live deletion via Alpine (if you want JS delete)
+        deleteSelected() {
+            if (this.selected.length === 0) return;
+
+            if (!confirm('Delete selected files?')) return;
+
+            // Call Livewire if exists
+            if (window.$wire) {
+                $wire.deleteFiles(this.selected);
+            }
+
+            // Remove locally
+            this.files = this.files.filter(f => !this.selected.includes(f));
+            this.clearAll();
+
+            // Dispatch event
+            window.dispatchEvent(new CustomEvent('files-deleted'));
+        }
+    }
+}
 </script>
 <script>
     const checkboxes = document.querySelectorAll('.folder-checkbox');
