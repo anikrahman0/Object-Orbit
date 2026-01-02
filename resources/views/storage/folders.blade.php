@@ -23,76 +23,65 @@
                 </a>
             </div>
         @else
-            <div class="flex justify-start mb-6 bg-white rounded-lg">
+            <div class="flex justify-between items-center mb-6 bg-white rounded-lg">
                 <form method="POST" action="{{ route('storage.create.folder', ['connectionId' => $connection->id]) }}" class="flex w-full space-x-2">
-                    <input type="hidden" name="_token" value="gA3Rr36G4T07DECIeODRg0ueTp8nFtcGfiynTxpg" autocomplete="off">
+                    @csrf
                     <input type="hidden" name="current_path" value="/"> 
             
                     <!-- Folder Name Input -->
-                    <input type="text" 
-                           name="folder_name" 
-                           required 
-                           placeholder="New Folder Name" 
-                           class="flex-grow border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
-                           pattern="[a-zA-Z0-9-_]+" 
-                           title="Alphanumeric, dash, underscore only">
-            
-                    <!-- Create Button -->
-                    <button type="submit" 
-                            class="flex items-center border border-blue-600 text-blue-600 px-5 py-2 rounded-lg hover:bg-blue-50 focus:ring-2 focus:ring-blue-300 font-medium transition">
-                        
-                        <!-- Plus Icon -->
-                        <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
-                        </svg>
-            
-                        Create Folder
-                    </button>
+                    <flux:input 
+                        type="text"
+                        placeholder="New Folder Name" 
+                        name="folder_name" 
+                        required
+                        max="255"
+                     />
+                    <flux:button type="submit" :loading="false" color="zinc" class="flex items-center space-x-1">
+                        <flux:icon name="plus" class="w-5 h-5" />
+                        <span>Create Folder</span>
+                    </flux:button>
                 </form>
             </div>
-            
-            <h3 class="font-semibold mb-2">Folders</h3>
-            <div class="mb-4 flex items-center space-x-2 text-sm text-gray-700">
-                <a href="{{ route('storage.connect', ['id' => $connection->id, 'path' => '/']) }}"
-                class="text-blue-600 hover:underline">Root</a>
-            
-                @php
-                    $segments = explode('/', trim($path, '/'));
-                    $breadcrumbPath = '';
-                @endphp
-            
-                @foreach($segments as $index => $segment)
-                    @php
-                        $breadcrumbPath .= '/' . $segment;
-                    @endphp
-                    <span>/</span>
-                    <a href="{{ route('storage.connect', ['id' => $connection->id, 'path' => ltrim($breadcrumbPath, '/')]) }}"
-                    class="text-blue-600 hover:underline">{{ $segment }}</a>
-                @endforeach
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-semibold">Folders</h2>
+                <flux:modal.trigger name="upload">
+                    <flux:button variant="primary" class="flex items-center space-x-1">
+                        <flux:icon name="upload" class="w-5 h-5" />
+                        <span>Upload Files</span>
+                    </flux:button>
+                </flux:modal.trigger>
             </div>
-            <ul class="mb-6 bg-blue-100 text-accent-content rounded-lg p-4">
-                {{-- @dd($folders) --}}
-                {{-- @foreach($folders as $folder)
+            
+            <div class="mb-4 flex items-center space-x-2 text-sm text-gray-700">
+                <flux:breadcrumbs>
+                    <flux:breadcrumbs.item href="{{ route('storage.connect', ['id' => $connection->id, 'path' => '/']) }}" separator="slash">root</flux:breadcrumbs.item>
+                
                     @php
-                        $folderPath = rtrim($path, '/') . '/' . basename($folder);
+                        $segments = explode('/', trim($path, '/'));
+                        $breadcrumbPath = '';
                     @endphp
-                    <li>
-                        <a href="{{ route('storage.connect', ['id' => $connection->id, 'path' => $folderPath]) }}"
-                        class="text-blue-600 hover:underline flex items-center gap-2">
-                            <svg class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6z"/></svg>
-                            {{ basename($folder) }}
-                        </a>
-                    </li>
-                @endforeach --}}
+                
+                    @foreach($segments as $index => $segment)
+                        @php
+                            $breadcrumbPath .= '/' . $segment;
+                        @endphp
+                        <flux:breadcrumbs.item href="{{ route('storage.connect', ['id' => $connection->id, 'path' => ltrim($breadcrumbPath, '/')]) }}" separator="slash">{{ $segment }}</flux:breadcrumbs.item>
+                    
+                    @endforeach
+                </flux:breadcrumbs>
+            </div>
+
+            <ul class="mb-6 {{ !empty($folders) && $folders->count() > 0 ?  'bg-zinc-100' : '' }} dark:bg-zinc-800 text-accent-content rounded-lg p-4">
                 <form method="POST" action="{{ route('storage.folder.deleteMultiple', $connection->id) }}" id="deleteForm">
                     @csrf
                 
                     @foreach ($folders as $folder)
                         <div class="flex items-center mb-2">
-                            <input type="checkbox" name="folders[]" value="{{ trim($path, '/') . '/' . $folder }}" class="mr-2 folder-checkbox">
-                            <a href="{{ route('storage.connect', ['id' => $connection->id, 'path' => trim($path, '/') . '/' . $folder]) }}"
-                            class="text-blue-600 hover:underline flex-1">
-                            📁 {{ $folder }}
+                            <flux:checkbox name="folders[]" value="{{ trim($path, '/') . '/' . $folder }}" class="mr-2 folder-checkbox"> </flux:checkbox>
+                            <a 
+                                href="{{ route('storage.connect', ['id' => $connection->id, 'path' => trim($path, '/') . '/' . $folder]) }}"
+                                class="flex items-center gap-2">
+                                <flux:icon name="folder" class="w-5 h-5"></flux:icon> {{ $folder }}
                             </a>
                         </div>
                     @endforeach
@@ -106,26 +95,211 @@
                 </form>
             </ul>
 
-            <h3 class="font-semibold mb-2">Files</h3>
+            @if(!empty($files) && count($files) > 0)
+                <h3 class="font-semibold mb-2">Files</h3>
+            @endif
             <ul>
-                @foreach($files as $file)
+                @forelse($files as $file)
                     @php
                         $filePath = rtrim($path, '/') . '/' . basename($file);
                         // Generate URL to view or download file - adjust as needed
                         $fileUrl = Storage::disk('connected_storage')->url($filePath);
                     @endphp
                     <li class="flex items-center gap-2 border-b-1 border-gray-200 py-2">
-                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 2v6h6"/>
-                        </svg>
+                        <flux:icon name="file" class="w-5 h-5"></flux:icon>
                         <a href="{{ $fileUrl }}" target="_blank" class="text-gray-700 hover:underline">{{ basename($file) }}</a>
                     </li>
-                @endforeach
+                @empty
+                    <p class="flex items-center gap-2 text-zinc-500"><flux:icon name="file-minus" class="w-5 h-5"></flux:icon> <span>Files in this folder are empty. </span></p>
+                @endforelse
             </ul>
         @endif
     </div>
+
+    <!--Upload Modal -->
+    <div x-data="uploadModal()">
+        <flux:modal name="upload" class="[:where(&)]:max-w-3xl [:where(&)]:w-full">
+            <div class="p-6 space-y-6">
+                <!-- Header -->
+                <div>
+                    <h2 class="text-lg font-semibold">Upload Files</h2>
+                    <p class="text-sm text-gray-500">
+                        Drag & drop files or click to select. Max 20 files, 10MB each.
+                    </p>
+                    <p class="text-sm text-red-600 mt-1" x-text="errorMessage"></p>
+                </div>
+
+                <!-- Drag & Drop Zone -->
+                <div
+                    class="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-600 p-10 text-center cursor-pointer"
+                    :class="dragging ? 'border-blue-500' : ''"
+                    x-on:dragover.prevent="dragging = true"
+                    x-on:dragleave.prevent="dragging = false"
+                    x-on:drop.prevent="dropFiles($event)"
+                    x-on:click="$refs.fileInput.click()">
+                    <flux:icon name="upload" class="w-12 h-12 text-zinc-400 mb-3"/>
+                    <p class="font-medium text-zinc-700 dark:text-zinc-200">Drop files here</p>
+                    <p class="text-sm text-zinc-500 mt-1">or click to browse</p>
+
+                    <input
+                        type="file"
+                        multiple
+                        class="hidden"
+                        x-ref="fileInput"
+                        x-on:change="selectFiles($event)"
+                        accept=".jpg,.jpeg,.png,.webp,.gif,.bmp,.tif,.tiff,.ico,.svg,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.rtf,.odt,.zip,.rar,.7z,.tar,.gz,.mp3,.wav,.ogg,.m4a,.flac,.aac,.mp4,.webm,.mov,.avi,.mkv,.flv,.json,.xml,.yml,.yaml,.md,.log,.html,.css"
+                    />
+                </div>
+
+            <!-- Selected Files -->
+                <template x-if="files.length">
+                    <div class="space-y-2 max-h-48 overflow-y-auto">
+                        <template x-for="(file, index) in files" :key="file.name">
+                            <div class="flex items-center justify-between rounded-lg bg-zinc-100 dark:bg-zinc-700 p-3">
+                                <div class="flex items-center gap-3">
+                                    <!-- Thumbnail if image -->
+                                    <template x-if="file.type.startsWith('image/')">
+                                        <flux:modal.trigger name="imagePreview">
+                                            <flux:tooltip content="Preview">
+                                                <img :src="URL.createObjectURL(file)" class="w-10 h-10 object-cover rounded" alt=""  x-on:click="preview(file)" />
+                                            </flux:tooltip>
+                                        </flux:modal.trigger>
+                                    </template>
+
+                                    <!-- File icon if not image -->
+                                    <template x-if="!file.type.startsWith('image/')">
+                                        <flux:icon name="file" class="w-10 h-10 text-zinc-400"/>
+                                    </template>
+
+                                    <div class="truncate">
+                                        <p class="text-sm font-medium" x-text="file.name"></p>
+                                        <p class="text-xs text-zinc-500" x-text="formatSize(file.size)"></p>
+                                    </div>
+                                </div>
+
+                                <!-- Delete button -->
+                                <flux:tooltip content="Remove file">
+                                    <flux:icon name="trash" x-on:click="files.splice(index, 1)" class="w-4 h-4"/>
+                                </flux:tooltip>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+
+                <!-- Footer -->
+                <div class="flex justify-end gap-2 pt-4 border-t dark:border-zinc-700">
+                    <flux:modal.close>
+                        <flux:button variant="ghost" data-flux-modal-close>Cancel</flux:button>
+                    </flux:modal.close>
+                    <flux:button variant="primary" @click="startUpload()">Start Upload</flux:button>
+                </div>
+            </div>
+            
+            <!-- Image Preview Modal -->
+            <flux:modal name="imagePreview" class="[:where(&)]:max-w-5xl [:where(&)]:w-full">
+                <div class="p-6 space-y-4 flex flex-col items-center">
+                    <img 
+                        x-bind:src="previewImage" 
+                        alt="Preview" 
+                        class="w-full max-h-[70vh] object-contain rounded-lg" 
+                    />
+                    <div class="flex justify-end w-full">
+                        <flux:modal.close>
+                            <flux:button variant="ghost" data-flux-modal-close>Close</flux:button>
+                        </flux:modal.close>
+                    </div>
+                </div>
+            </flux:modal>
+        </flux:modal>
+    </div>
 </div>
+<script>
+function uploadModal() {
+    return {
+        files: [],
+        previewImage: null,
+        dragging: false,
+        maxFiles: 20,
+        maxSize: 10 * 1024 * 1024, // 10MB
+        allowedTypes: [
+            'image/jpeg','image/png','image/webp','image/gif','image/bmp','image/tiff','image/svg+xml',
+            'image/x-icon','application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-powerpoint','application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'text/plain','text/csv','application/rtf','application/vnd.oasis.opendocument.text',
+            'application/zip','application/x-rar-compressed','application/x-7z-compressed',
+            'application/x-tar','application/gzip',
+            'audio/mpeg','audio/wav','audio/ogg','audio/mp4','audio/flac','audio/aac',
+            'video/mp4','video/webm','video/quicktime','video/x-msvideo','video/x-matroska','video/x-flv',
+            'application/json','application/xml','text/yaml','text/markdown','text/html','text/css','text/log'
+        ],
+        errorMessage: '',
+
+        handleFiles(selected) {
+            this.errorMessage = '';
+            const newFiles = [...selected];
+
+            if (this.files.length + newFiles.length > this.maxFiles) {
+                this.errorMessage = `You can upload maximum ${this.maxFiles} files.`;
+                return;
+            }
+
+            newFiles.forEach(file => {
+                if (!this.allowedTypes.includes(file.type)) {
+                    this.errorMessage = `File type not allowed: ${file.name}`;
+                    return;
+                }
+                if (file.size > this.maxSize) {
+                    this.errorMessage = `File too large (max 10MB): ${file.name}`;
+                    return;
+                }
+                this.files.push(file);
+            });
+        },
+
+        dropFiles(event) {
+            this.dragging = false;
+            this.handleFiles(event.dataTransfer.files);
+        },
+
+        selectFiles(event) {
+            this.handleFiles(event.target.files);
+        },
+
+        formatSize(size) {
+            if (size < 1024) return size + ' B'; // Bytes
+            else if (size < 1024 * 1024) return (size / 1024).toFixed(2) + ' KB'; // KB
+            else if (size < 1024 * 1024 * 1024) return (size / (1024 * 1024)).toFixed(2) + ' MB'; // MB
+            else return (size / (1024 * 1024 * 1024)).toFixed(2) + ' GB'; // GB
+        },
+
+        startUpload() {
+            if (!this.files.length) {
+                this.errorMessage = 'No files selected.';
+                return;
+            }
+
+            console.log('Ready to upload files:', this.files);
+            // Here call your Livewire method or API for S3 upload
+        },
+
+        preview(file) {
+            if (file.type.startsWith('image/')) {
+                this.previewImage = URL.createObjectURL(file);
+
+                // Dispatch a custom event Flux listens to
+                window.dispatchEvent(new CustomEvent('modal-show', {
+                    detail: { name: 'imagePreview' }
+                }));
+            }
+        }
+
+
+    }
+}
+
+</script>
 <script>
     const checkboxes = document.querySelectorAll('.folder-checkbox');
     const deleteBtn = document.getElementById('deleteSelectedBtn');
