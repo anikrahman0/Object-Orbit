@@ -104,12 +104,11 @@
 
                         <!-- Select / Deselect All -->
                         <button type="button" @click="toggleSelectAll()" class="inline-flex items-center cursor-pointer">
-                            <flux:badge 
-                                variant="pill" 
-                                icon="user"
-                                x-text="allSelected ? 'Deselect All' : 'Select All'"
-                            ></flux:badge>
+                            <flux:badge variant="pill" icon="file-check">
+                                <span x-text="allSelected ? 'Deselect All' : 'Select All'"></span>
+                            </flux:badge>
                         </button>
+                        
 
                         <!-- Delete Selected Modal Trigger -->
                         <flux:modal.trigger 
@@ -137,22 +136,23 @@
                             $filePath = rtrim($path, '/') . '/' . basename($file);
                             $fileUrl  = Storage::disk('connected_storage')->url($filePath);
                         @endphp
-
+                    
                         <li class="flex items-center justify-between py-2">
                             <div class="flex items-center gap-3">
-
-                                <!-- Flux Checkbox -->
-                                <flux:checkbox
-                                    x-bind:checked="isSelected('{{ $filePath }}')"
-                                    x-on:click="toggle('{{ $filePath }}')"
-                                ></flux:checkbox>
-
+                    
+                                <!-- ✅ Wrapper handles Alpine -->
+                                <div @click.stop="toggle('{{ $filePath }}')" class="cursor-pointer">
+                                    <flux:checkbox
+                                        :checked="false"
+                                        x-bind:checked="isSelected('{{ $filePath }}')"
+                                    />
+                                </div>
+                    
                                 <flux:icon name="file" class="w-5 h-5 text-gray-500"/>
-
+                    
                                 <a href="{{ $fileUrl }}"
-                                    target="_blank"
-                                    class="text-gray-700 hover:underline text-sm break-words break-all overflow-hidden"
-                                >
+                                   target="_blank"
+                                   class="text-gray-700 hover:underline text-sm break-all">
                                     {{ basename($file) }}
                                 </a>
                             </div>
@@ -164,6 +164,7 @@
                         </p>
                     @endforelse
                 </ul>
+                    
                 <!-- Delete Modal -->
                 <flux:modal name="delete-selected" class="min-w-[22rem]">
                     <form method="POST" action="{{ route('storage.delete-files', $connection->id) }}">
