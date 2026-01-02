@@ -99,12 +99,17 @@ class S3Controller extends Controller
         } catch (\Exception $e) {
             Log::error('S3 connection failed: ' . $e->getMessage());
 
+            // Clean message for UI (no line breaks, no layout breaking)
+            $connectionError = 'Connection failed: ' . trim(
+                preg_replace('/\s+/', ' ', $e->getMessage())
+            );
+
             return view('storage.folders', [
                 'folders' => collect(),
                 'files' => collect(),
                 'path' => $path,
                 'connection' => $connection,
-                'connectionError' => 'Connection failed: ' . $e->getMessage(), // Pass error
+                'connectionError' => $connectionError, // Pass cleaned error
             ]);
         }
     }
@@ -169,5 +174,37 @@ class S3Controller extends Controller
         }
 
         return redirect()->back()->with('success', "Folder '$folderName' created successfully.");
+    }
+
+
+    public function deleteMultipleFiles($id, Request $request, StorageConnectionService $service)
+    {
+        $request->validate([
+            'files' => 'required|array',
+            'files.*' => 'string',
+        ]);
+        $files = $request->input('files', []); // Expect full paths for each file
+
+        if (empty($files)) {
+            return back()->with('error', 'No files selected for deletion.');
+        }
+
+        $connection = auth()->user()->storageConnection()->findOrFail($id);
+
+        // Register the disk dynamically
+        $service->registerDisk($connection->toArray(), 'connected_storage');
+        $disk = Storage::disk('connected_storage');
+
+        try {
+            foreach ($files as $filePath) {
+                if ($disk->exists($filePath)) {
+                    $disk->delete($filePath);
+                }
+            }
+
+            return back()->with('success', count($files) . ' file(s) deleted successfully.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to delete files: ' . $e->getMessage());
+        }
     }
 }

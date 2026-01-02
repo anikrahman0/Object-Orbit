@@ -25,6 +25,7 @@ Route::controller(S3Controller::class)->middleware(['auth', 'verified'])->group(
     Route::get('/storage/connect/{id}', 'storageConnect')->name('storage.connect');
     Route::post('/create-folder/{connectionId}', 'createFolder') ->name('storage.create.folder');
     Route::post('/storage/{id}/folders/delete', 'deleteMultipleFolders') ->name('storage.folder.deleteMultiple');
+    Route::post('/storage/{id}/delete-files','deleteMultipleFiles') ->name('storage.delete-files');
 });
 
 
