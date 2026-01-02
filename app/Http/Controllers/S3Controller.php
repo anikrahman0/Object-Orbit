@@ -99,12 +99,17 @@ class S3Controller extends Controller
         } catch (\Exception $e) {
             Log::error('S3 connection failed: ' . $e->getMessage());
 
+            // Clean message for UI (no line breaks, no layout breaking)
+            $connectionError = 'Connection failed: ' . trim(
+                preg_replace('/\s+/', ' ', $e->getMessage())
+            );
+
             return view('storage.folders', [
                 'folders' => collect(),
                 'files' => collect(),
                 'path' => $path,
                 'connection' => $connection,
-                'connectionError' => 'Connection failed: ' . $e->getMessage(), // Pass error
+                'connectionError' => $connectionError, // Pass cleaned error
             ]);
         }
     }

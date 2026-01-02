@@ -4,23 +4,18 @@
     <h1 class="text-2xl font-bold mb-4">{{ $connection->bucket }}</h1>
     <div>
         @if(!empty($connectionError))
-            <div class="flex flex-col items-center justify-center min-h-[200px] bg-red-50 dark:bg-red-900 rounded-lg p-6 text-center space-y-4 border border-red-200 dark:border-red-700">
-                <!-- Warning Icon -->
-                <svg class="w-12 h-12 text-red-600 dark:text-red-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M12 3C7 3 3 7 3 12s4 9 9 9 9-4 9-9-4-9-9-9z" />
-                </svg>
-        
-                <h2 class="text-xl font-semibold text-red-700 dark:text-red-300">Connection Failed</h2>
-                <p class="text-red-600 dark:text-red-400">{{ $connectionError }}</p>
-        
-                <a href="{{ route('storage.list') }}" 
-                class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition">
-                    <!-- Back Icon -->
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-                    </svg>
+            <div class="flex flex-col items-center justify-center min-h-[200px]  rounded-lg p-6 text-center space-y-4 bg-zinc-50 dark:bg-zinc-80">
+                
+                <div class="flex justify-center items-center space-x-2">
+                    <flux:icon name="wifi-off" class="w-7 h-7 text-red-300 dark:text-red-300"></flux:icon>
+                    <h2 class="font-semibold text-zinc-400 dark:text-zinc-400">Connection Failed</h2>
+                </div>
+                <flux-heading class="break-words break-all overflow-hidden text-start text-zinc-500 dark:text-zinc-500 text-sm">{{ $connectionError }}</flux-heading>
+
+                <flux:button size="sm" href="{{ route('storage.list') }}" variant="filled">
+                    <flux:icon name="arrow-left" class="w-5 h-5 mr-2"></flux:icon>
                     Back to Storage List
-                </a>
+                </flux:button>
             </div>
         @else
             <div class="flex justify-between items-center mb-6 bg-white rounded-lg">
