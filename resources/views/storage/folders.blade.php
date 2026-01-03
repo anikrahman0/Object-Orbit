@@ -21,7 +21,7 @@
             <div class="flex justify-between items-center mb-6 bg-white rounded-lg">
                 <form method="POST" action="{{ route('storage.create.folder', ['connectionId' => $connection->id]) }}" class="flex w-full space-x-2">
                     @csrf
-                    <input type="hidden" name="current_path" value="/"> 
+                    <input type="hidden" name="current_path" value="{{ $path }}"> 
             
                     <!-- Folder Name Input -->
                     <flux:input 
