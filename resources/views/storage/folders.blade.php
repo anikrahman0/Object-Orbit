@@ -12,7 +12,7 @@
                 </div>
                 <flux-heading class="break-words break-all overflow-hidden text-start text-zinc-500 dark:text-zinc-500 text-sm">{{ $connectionError }}</flux-heading>
 
-                <flux:button size="sm" href="{{ route('storage.list') }}" variant="filled">
+                <flux:button size="sm" href="{{ route('storage.list') }}" variant="filled" wire:navigate>
                     <flux:icon name="arrow-left" class="w-5 h-5 mr-2"></flux:icon>
                     Back to Storage List
                 </flux:button>
