@@ -325,6 +325,13 @@ function uploadModal() {
         ],
         errorMessage: '',
 
+        reset() {
+            this.files = []
+            this.previewImage = null
+            this.errorMessage = ''
+            if (this.$refs.fileInput) this.$refs.fileInput.value = ''
+        },
+
         handleFiles(selected) {
             this.errorMessage = '';
             const newFiles = [...selected];
@@ -364,13 +371,20 @@ function uploadModal() {
         },
 
         startUpload() {
-            if (!this.files.length) {
-                this.errorMessage = 'No files selected.';
-                return;
-            }
+            if (!this.files.length) return;
 
-            console.log('Ready to upload files:', this.files);
-            // Here call your Livewire method or API for S3 upload
+            // Push files to global queue
+            Alpine.store('uploadQueue').addFiles(this.files);
+
+            // Clear upload modal
+            this.files = [];
+
+            this.errorMessage = '';
+
+            // Close the modal programmatically
+            Flux.modal('upload').close()
+
+            // Start actual upload (AJAX, Livewire, or Laravel Queue)
         },
 
         preview(file) {
