@@ -137,8 +137,62 @@
         </flux:header>
 
         {{ $slot }}
+        <!-- Mini Upload Queue -->
+        <div class="fixed bottom-4 right-4 w-80 space-y-2 z-50"
+            x-data
+            x-show="Alpine.store('uploadQueue').queue.length > 0">
+
+            <template x-for="(file, index) in Alpine.store('uploadQueue').queue" :key="file.id">
+            <div class="bg-white dark:bg-zinc-800 rounded shadow p-2 flex flex-col">
+                <div class="flex justify-between items-center">
+                    <span class="truncate text-sm" x-text="file.name"></span>
+                    <button @click="Alpine.store('uploadQueue').cancelUpload(index)" class="text-red-500 text-xs">Cancel</button>
+                </div>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 h-1 rounded mt-1">
+                    <div class="bg-blue-500 h-1 rounded" :style="`width: ${file.progress}%`"></div>
+                </div>
+                <div class="text-xs text-gray-500 mt-1">
+                    <span x-text="file.status"></span>
+                </div>
+            </div>
+            </template>
+        </div>
 
         @fluxScripts
+        <script>
+            document.addEventListener('alpine:init', () => {
+                Alpine.store('uploadQueue', {
+                    queue: [],
+
+                    addFiles(files) {
+                        files.forEach(file => {
+                            this.queue.push({
+                                id: Date.now() + Math.random(),
+                                name: file.name,
+                                progress: 0,
+                                status: 'Pending',
+                                file: file,
+                            });
+                        });
+                    },
+
+                    updateProgress(id, progress) {
+                        const f = this.queue.find(f => f.id === id);
+                        if (f) f.progress = progress;
+                    },
+
+                    updateStatus(id, status) {
+                        const f = this.queue.find(f => f.id === id);
+                        if (f) f.status = status;
+                    },
+
+                    cancelUpload(index) {
+                        // Optionally cancel upload logic
+                        this.queue.splice(index, 1);
+                    },
+                });
+            });
+        </script>
         {{-- / Flux Scripts for production --}}
         {{-- <script
             src="{{ asset('flux/flux.js') }}"

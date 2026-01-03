@@ -19,14 +19,11 @@
         <div class="relative overflow-x-auto border sm:rounded-lg">
             
 
-            <div class="flex p-6 bg-white rounded-lg  dark:bg-gray-800 dark:border-gray-700">
+            <div class="flex items-center justify-between p-6 bg-white rounded-lg  dark:bg-gray-800 dark:border-gray-700">
                 <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Storage List</h5>
-                <a href="{{ route('storage.create') }}" class="ml-auto inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-blue-800">
-                    Add New Storage
-                    <svg class="w-4 h-4 ms-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 7h15M8 1v12"/>
-                    </svg>
-                </a>
+                <flux:button icon="plus" :href="route('storage.create')" variant="primary" wire:navigate>
+                    Add Storage Connection
+                </flux:button>
             </div>
 
             <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
