@@ -142,7 +142,7 @@ class S3Controller extends Controller
                 $disk->deleteDirectory($folderPath);
             }
 
-            return back()->with('success', 'Selected folders deleted successfully.');
+            return back()->with('success', 'Selected folder(s) deleted successfully.');
         } catch (\Exception $e) {
             return back()->with('error', 'Failed to delete folders: ' . $e->getMessage());
         }

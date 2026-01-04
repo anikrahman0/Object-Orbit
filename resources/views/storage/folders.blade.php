@@ -18,7 +18,24 @@
                 </flux:button>
             </div>
         @else
-            <div class="flex justify-between items-center mb-6 bg-white rounded-lg">
+            <div class="mb-4 flex items-center space-x-2 text-sm text-gray-700 border-b">
+                <flux:breadcrumbs class="mb-3">
+                    <flux:breadcrumbs.item href="{{ route('storage.connect', ['id' => $connection->id, 'path' => '/']) }}" separator="slash">root</flux:breadcrumbs.item>
+                
+                    @php
+                        $segments = explode('/', trim($path, '/'));
+                        $breadcrumbPath = '';
+                    @endphp
+                
+                    @foreach($segments as $index => $segment)
+                        @php
+                            $breadcrumbPath .= '/' . $segment;
+                        @endphp
+                        <flux:breadcrumbs.item href="{{ route('storage.connect', ['id' => $connection->id, 'path' => ltrim($breadcrumbPath, '/')]) }}" separator="slash">{{ $segment }}</flux:breadcrumbs.item>
+                    @endforeach
+                </flux:breadcrumb>
+            </div>
+            {{-- <div class="flex justify-between items-center mb-6 bg-white rounded-lg">
                 <form method="POST" action="{{ route('storage.create.folder', ['connectionId' => $connection->id]) }}" class="flex w-full space-x-2">
                     @csrf
                     <input type="hidden" name="current_path" value="{{ $path }}"> 
@@ -36,39 +53,29 @@
                         <span>Create Folder</span>
                     </flux:button>
                 </form>
-            </div>
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="font-semibold">Folders</h2>
+            </div> --}}
+            <div class="mb-4 gap-3 flex items-center">
+                {{-- <h2 class="font-semibold">Folders</h2> --}}
+                {{-- <flux:button size="sm" variant="filled"> <flux:icon name="layout-list" class="w-4 h-4"></flux:icon> Select All</flux:button> --}}
+                <flux:button size="sm" variant="filled"> <flux:icon name="folder" class="w-5 h-5"></flux:icon> Create Folder</flux:button>
                 <flux:modal.trigger name="upload">
-                    <flux:button variant="primary" class="flex items-center space-x-1">
-                        <flux:icon name="upload" class="w-5 h-5" />
-                        <span>Upload Files</span>
-                    </flux:button>
+                    <flux:button size="sm" variant="filled"> <flux:icon name="upload" class="w-5 h-5"></flux:icon> Upload Files</flux:button>
                 </flux:modal.trigger>
             </div>
             
-            <div class="mb-4 flex items-center space-x-2 text-sm text-gray-700">
-                <flux:breadcrumbs>
-                    <flux:breadcrumbs.item href="{{ route('storage.connect', ['id' => $connection->id, 'path' => '/']) }}" separator="slash">root</flux:breadcrumbs.item>
-                
-                    @php
-                        $segments = explode('/', trim($path, '/'));
-                        $breadcrumbPath = '';
-                    @endphp
-                
-                    @foreach($segments as $index => $segment)
-                        @php
-                            $breadcrumbPath .= '/' . $segment;
-                        @endphp
-                        <flux:breadcrumbs.item href="{{ route('storage.connect', ['id' => $connection->id, 'path' => ltrim($breadcrumbPath, '/')]) }}" separator="slash">{{ $segment }}</flux:breadcrumbs.item>
-                    
-                    @endforeach
-                </flux:breadcrumbs>
-            </div>
-
             <ul class="mb-6 {{ !empty($folders) && $folders->count() > 0 ?  'bg-zinc-100' : '' }} dark:bg-zinc-800 text-accent-content rounded-lg p-4">
                 <form method="POST" action="{{ route('storage.folder.deleteMultiple', $connection->id) }}" id="deleteForm">
                     @csrf
+                    <flux:button 
+                        size="sm" 
+                        onclick="return confirm('Are you sure you want to delete these folders?')" 
+                        class="text-sm bg-red-300 hover:bg-red-400text-red-600 inline-flex items-center mb-3" 
+                        icon="trash" 
+                        type="submit" 
+                        id="deleteSelectedBtn" >Delete Selected Folder(s)
+                    </flux:button>
+
+
                 
                     @foreach ($folders as $folder)
                         <div class="flex items-center mb-2">
@@ -80,13 +87,6 @@
                             </a>
                         </div>
                     @endforeach
-                
-                    <button type="submit" 
-                        onclick="return confirm('Are you sure you want to delete the selected folder(s)? This action cannot be undone.')"
-                        class="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-opacity duration-300"
-                        id="deleteSelectedBtn" style="display: none;">
-                        Delete Selected
-                    </button>
                 </form>
             </ul>
             @if(!empty($files) && count($files) > 0)
@@ -196,13 +196,90 @@
                                     variant="danger" 
                                     type="submit"
                                 >
-                                    Delete
-                                </flux:button>
-                            </div>
+                                    <flux:icon name="trash" class="w-4 h-4 mr-2"></flux:icon>
+                                    Delete Selected Files (<span x-text="selected.length"></span>)
+                                </flux:badge>
+                            </flux:modal.trigger>
+    
                         </div>
-                    </form>
-                </flux:modal>
-            </div>
+                    @endif
+    
+                    <!-- File list -->
+                    <ul class="divide-y divide-gray-200">
+                        @forelse($files as $file)
+                            @php
+                                $filePath = rtrim($path, '/') . '/' . basename($file);
+                                $fileUrl  = Storage::disk('connected_storage')->url($filePath);
+                            @endphp
+    
+                            <li class="flex items-center justify-between py-2">
+                                <div class="flex items-center gap-3">
+    
+                                    <!-- Flux Checkbox -->
+                                    <flux:checkbox
+                                        x-bind:checked="isSelected('{{ $filePath }}')"
+                                        x-on:click="toggle('{{ $filePath }}')"
+                                    ></flux:checkbox>
+    
+                                    <flux:icon name="file" class="w-5 h-5 text-gray-500"/>
+    
+                                    <a href="{{ $fileUrl }}"
+                                        target="_blank"
+                                        class="text-gray-700 hover:underline text-sm break-words break-all overflow-hidden"
+                                    >
+                                        {{ basename($file) }}
+                                    </a>
+                                </div>
+                            </li>
+                        @empty
+                            {{-- <p class="flex items-center gap-2 text-zinc-500 py-3">
+                                <flux:icon name="file-minus" class="w-5 h-5"/>
+                                <span>Files in this folder are empty.</span>
+                            </p> --}}
+                        @endforelse
+                    </ul>
+                    <!-- Delete Modal -->
+                    <flux:modal name="delete-selected" class="min-w-[22rem]">
+                        <form method="POST" action="{{ route('storage.delete-files', $connection->id) }}">
+                            @csrf
+    
+                            <!-- Hidden inputs for selected files -->
+                            <template x-for="file in selected" :key="file">
+                                <input type="hidden" name="files[]" x-for="file in selected" :key="file" :value="file">
+                            </template>
+    
+                            <div class="space-y-6">
+                                <div>
+                                    <flux:heading size="lg">Delete Selected Files?</flux:heading>
+    
+                                    <flux:text class="mt-2">
+                                        You're about to delete <strong x-text="selected.length"></strong> file(s).<br>
+                                        This action cannot be reversed.
+                                    </flux:text>
+                                </div>
+    
+                                <div class="flex gap-2">
+                                    <flux:spacer />
+    
+                                    <flux:modal.close>
+                                        <flux:button variant="ghost" type="button">Cancel</flux:button>
+                                    </flux:modal.close>
+    
+                                    <flux:button 
+                                        variant="danger" 
+                                        type="submit"
+                                    >
+                                        Delete
+                                    </flux:button>
+                                </div>
+                            </div>
+                        </form>
+                    </flux:modal>
+                </div>
+            </ul>
+            {{-- @if(!empty($files) && count($files) > 0)
+                <h3 class="font-semibold mb-3">Files</h3>
+            @endif --}}
         @endif
     </div>
 
@@ -372,7 +449,10 @@ function uploadModal() {
         },
 
         startUpload() {
-            if (!this.files.length) return;
+            if (this.files.length === 0){
+                this.errorMessage = 'No files selected.';
+                return;
+            }
 
             // Push files to global queue
             Alpine.store('uploadQueue').addFiles(this.files);
@@ -472,16 +552,18 @@ function fileSelector(files = []) {
 
     function toggleDeleteBtn() {
         const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+
         if (anyChecked) {
-            deleteBtn.style.display = 'inline-block';
+            deleteBtn.style.display = 'inline-flex'; // IMPORTANT
             deleteBtn.classList.remove('opacity-0');
             deleteBtn.classList.add('opacity-100');
         } else {
             deleteBtn.classList.remove('opacity-100');
             deleteBtn.classList.add('opacity-0');
+
             setTimeout(() => {
                 deleteBtn.style.display = 'none';
-            }, 300); // match transition duration
+            }, 200);
         }
     }
 
