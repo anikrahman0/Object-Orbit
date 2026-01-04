@@ -25,6 +25,7 @@ class StorageConnectionService
             'endpoint' => $connection['endpoint'] ?? null,
             'use_path_style_endpoint' => true,
             'throw' => false,
+            'visibility' => 'public',
         ];
         
         Config::set("filesystems.disks.{$diskName}", $config);
