@@ -138,26 +138,36 @@
 
         {{ $slot }}
         <!-- Mini Upload Queue -->
-        <div class="fixed bottom-4 right-4 w-80 space-y-2 z-50"
-            x-data
-            x-show="Alpine.store('uploadQueue').queue.length > 0">
+        <div class="fixed bottom-4 right-4 w-80 z-50"
+        x-data
+        x-show="Alpine.store('uploadQueue').queue.length > 0">
 
+            <!-- Scrollable container with background -->
+            <div class="max-h-96 overflow-y-auto space-y-2 p-2 bg-white dark:bg-zinc-800 rounded shadow-lg">
             <template x-for="(file, index) in Alpine.store('uploadQueue').queue" :key="file.id">
-            <div class="bg-white dark:bg-zinc-800 rounded shadow p-2 flex flex-col">
-                <div class="flex justify-between items-center">
-                    <span class="truncate text-sm" x-text="file.name"></span>
-                    <button @click="Alpine.store('uploadQueue').cancelUpload(index)" class="text-red-500 text-xs">Cancel</button>
+                <div class="bg-gray-100 dark:bg-zinc-700 rounded p-2 flex flex-col">
+                    <div class="flex justify-between items-center">
+                        <span class="truncate text-sm" x-text="file.name"></span>
+                        <button @click="Alpine.store('uploadQueue').cancelUpload(index)" class="text-red-500 text-xs">Cancel</button>
+                    </div>
+
+                    <!-- Progress bar -->
+                    <div class="w-full bg-gray-200 dark:bg-gray-600 h-1 rounded mt-1">
+                        <div class="bg-blue-500 h-1 rounded" :style="`width: ${file.progress ?? 0}%`"></div>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="text-xs text-gray-500 mt-1">
+                        <span x-text="file.status ?? 'Pending'"></span>
+                    </div>
                 </div>
-                <div class="w-full bg-gray-200 dark:bg-gray-700 h-1 rounded mt-1">
-                    <div class="bg-blue-500 h-1 rounded" :style="`width: ${file.progress}%`"></div>
-                </div>
-                <div class="text-xs text-gray-500 mt-1">
-                    <span x-text="file.status"></span>
-                </div>
-            </div>
             </template>
+            </div>
         </div>
 
+
+        
+        <!-- In app.blade.php, before Alpine/Flux -->
         @fluxScripts
         <script>
             document.addEventListener('alpine:init', () => {
@@ -178,20 +188,29 @@
 
                     updateProgress(id, progress) {
                         const f = this.queue.find(f => f.id === id);
-                        if (f) f.progress = progress;
+                        if(f) f.progress = progress;
                     },
 
                     updateStatus(id, status) {
                         const f = this.queue.find(f => f.id === id);
-                        if (f) f.status = status;
+                        if(f) f.status = status;
+
+                        // Auto remove successfully uploaded files after 1s
+                        if(status === 'Success'){
+                            setTimeout(() => {
+                                const index = this.queue.findIndex(f => f.id === id);
+                                if(index !== -1) this.queue.splice(index, 1);
+                            }, 1000);
+                        }
                     },
 
                     cancelUpload(index) {
-                        // Optionally cancel upload logic
+                        // Optional: cancel actual upload logic if needed
                         this.queue.splice(index, 1);
                     },
                 });
             });
+
         </script>
         {{-- / Flux Scripts for production --}}
         {{-- <script

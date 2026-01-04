@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StorageConnectionRequest;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use App\Services\StorageConnectionService;
+use App\Http\Requests\StorageConnectionRequest;
 
 class S3Controller extends Controller
 {
@@ -66,8 +67,6 @@ class S3Controller extends Controller
     }
 
 
-
-
     public function storageConnect($id, StorageConnectionService $service)
     {
         $connection = auth()->user()->storageConnection()->findOrFail($id);
@@ -112,6 +111,78 @@ class S3Controller extends Controller
                 'connectionError' => $connectionError, // Pass cleaned error
             ]);
         }
+    }
+
+    public function uploadFilesToFolder(Request $request, $connectionId, StorageConnectionService $service)
+    {
+        // Validate max 20 files
+        $validator = Validator::make($request->all(), [
+            'files' => 'required|array|max:20',
+            'files.*' => 'file|max:10240|mimes:jpg,jpeg,png,webp,gif,bmp,tif,tiff,ico,svg,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,rtf,odt,zip,rar,7z,tar,gz,mp3,wav,ogg,m4a,flac,aac,mp4,webm,mov,avi,mkv,flv,json,xml,yaml,yml,md,log,html,css',
+            'current_path' => 'required|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            $errors = [];
+            foreach ($request->file('files', []) as $index => $file) {
+                $key = "files.$index";
+                if ($validator->errors()->has($key)) {
+                    $errors[$file->getClientOriginalName()] = $validator->errors()->first($key);
+                }
+            }
+
+            return response()->json([
+                'success' => false,
+                'errors' => $errors,
+            ], 422);
+        }
+
+        $connection = auth()->user()->storageConnection()->findOrFail($connectionId);
+
+        // Register disk dynamically
+        $service->registerDisk($connection->toArray(), 'connected_storage');
+        $disk = Storage::disk('connected_storage');
+
+        $currentPath = $request->input('current_path', '/');
+
+        $uploadedFiles = [];
+        $errors = [];
+
+        foreach ($request->file('files') as $file) {
+            try {
+                $filename = $file->getClientOriginalName();
+
+                // Debug log
+                Log::info('Uploading file', [
+                    'file' => $filename,
+                    'current_path' => $currentPath
+                ]);
+
+                // Upload to disk
+                $disk->putFileAs($currentPath, $file, $filename, 'public');
+
+                $uploadedFiles[] = $filename;
+            } catch (\Exception $e) {
+                Log::error('Upload failed', [
+                    'file' => $file->getClientOriginalName(),
+                    'error' => $e->getMessage()
+                ]);
+                $errors[] = $file->getClientOriginalName();
+            }
+        }
+
+        if (count($errors) > 0) {
+            return response()->json([
+                'success' => false,
+                'uploaded' => $uploadedFiles,
+                'failed' => $errors
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'uploaded' => $uploadedFiles
+        ]);
     }
 
 

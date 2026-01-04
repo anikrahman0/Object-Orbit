@@ -67,9 +67,11 @@
                 <form method="POST" action="{{ route('storage.folder.deleteMultiple', $connection->id) }}" id="deleteForm">
                     @csrf
                     <flux:button 
+                        variant="primary" 
+                        color="red"
                         size="sm" 
                         onclick="return confirm('Are you sure you want to delete these folders?')" 
-                        class="text-sm bg-red-300 hover:bg-red-400text-red-600 inline-flex items-center mb-3" 
+                        class="text-sm bg-red-100 border text-red-700 hover:bg-red-100 inline-flex items-center mb-3" 
                         icon="trash" 
                         type="submit" 
                         id="deleteSelectedBtn" >Delete Selected Folder(s)
@@ -88,113 +90,30 @@
                         </div>
                     @endforeach
                 </form>
-            </ul>
-            @if(!empty($files) && count($files) > 0)
-                <h3 class="font-semibold mb-3">Files</h3>
-            @endif
-
-            <div 
-                x-data="fileSelector(@js($files))"
-                @files-deleted.window="clearAll()"
-                class="space-y-3"
-            >
-                <!-- Actions -->
-                @if(!empty($files) && count($files) > 0)
-                    <div class="flex items-center gap-3">
-
-                        <!-- Select / Deselect All -->
-                        <button type="button" @click="toggleSelectAll()" class="inline-flex items-center cursor-pointer">
-                            <flux:badge variant="pill" icon="file-check">
-                                <span x-text="allSelected ? 'Deselect All' : 'Select All'"></span>
-                            </flux:badge>
-                        </button>
-                        
-
-                        <!-- Delete Selected Modal Trigger -->
-                        <flux:modal.trigger 
-                            name="delete-selected" 
-                            x-show="selected.length > 0"
-                            x-cloak
-                        >
-                            <flux:badge
-                                variant="pill" 
-                                color="red"
-                                class="text-sm text-red-600 inline-flex items-center"
+                <div x-data="fileSelector(@js($files))" @files-deleted.window="clearAll()" class="space-y-3" >
+                    <!-- Actions -->
+                    @if(!empty($files) && count($files) > 0)
+                        <div class="flex items-center gap-3 border-t">
+    
+                            <!-- Select / Deselect All -->
+                            <button type="button" @click="toggleSelectAll()" class="inline-flex items-center cursor-pointer mt-4 ">
+                                <flux:badge 
+                                    variant="pill" 
+                                    icon="layout-list"
+                                    x-text="allSelected ? 'Deselect All Files' : 'Select All Files'"
+                                ></flux:badge>
+                            </button>
+    
+                            <!-- Delete Selected Modal Trigger -->
+                            <flux:modal.trigger 
+                                name="delete-selected" 
+                                x-show="selected.length > 0"
+                                x-cloak
                             >
-                                <flux:icon name="trash" class="w-4 h-4 mr-2"></flux:icon>
-                                Delete Selected (<span x-text="selected.length"></span>)
-                            </flux:badge>
-                        </flux:modal.trigger>
-
-                    </div>
-                @endif
-
-                <!-- File list -->
-                <ul class="divide-y divide-gray-200">
-                    @forelse($files as $file)
-                        @php
-                            $filePath = rtrim($path, '/') . '/' . basename($file);
-                            $fileUrl  = Storage::disk('connected_storage')->url($filePath);
-                        @endphp
-                    
-                        <li class="flex items-center justify-between py-2">
-                            <div class="flex items-center gap-3">
-                    
-                                <!-- ✅ Wrapper handles Alpine -->
-                                <div @click.stop="toggle('{{ $filePath }}')" class="cursor-pointer">
-                                    <flux:checkbox
-                                        :checked="false"
-                                        x-bind:checked="isSelected('{{ $filePath }}')"
-                                    />
-                                </div>
-                    
-                                <flux:icon name="file" class="w-5 h-5 text-gray-500"/>
-                    
-                                <a href="{{ $fileUrl }}"
-                                   target="_blank"
-                                   class="text-gray-700 hover:underline text-sm break-all">
-                                    {{ basename($file) }}
-                                </a>
-                            </div>
-                        </li>
-                    @empty
-                        <p class="flex items-center gap-2 text-zinc-500 py-3">
-                            <flux:icon name="file-minus" class="w-5 h-5"/>
-                            <span>Files in this folder are empty.</span>
-                        </p>
-                    @endforelse
-                </ul>
-                    
-                <!-- Delete Modal -->
-                <flux:modal name="delete-selected" class="min-w-[22rem]">
-                    <form method="POST" action="{{ route('storage.delete-files', $connection->id) }}">
-                        @csrf
-
-                        <!-- Hidden inputs for selected files -->
-                        <template x-for="file in selected" :key="file">
-                            <input type="hidden" name="files[]" x-for="file in selected" :key="file" :value="file">
-                        </template>
-
-                        <div class="space-y-6">
-                            <div>
-                                <flux:heading size="lg">Delete Selected Files?</flux:heading>
-
-                                <flux:text class="mt-2">
-                                    You're about to delete <strong x-text="selected.length"></strong> file(s).<br>
-                                    This action cannot be reversed.
-                                </flux:text>
-                            </div>
-
-                            <div class="flex gap-2">
-                                <flux:spacer />
-
-                                <flux:modal.close>
-                                    <flux:button variant="ghost" type="button">Cancel</flux:button>
-                                </flux:modal.close>
-
-                                <flux:button 
-                                    variant="danger" 
-                                    type="submit"
+                                <flux:badge
+                                    variant="pill" 
+                                    color="red"
+                                    class="text-sm text-red-600 inline-flex items-center mt-4"
                                 >
                                     <flux:icon name="trash" class="w-4 h-4 mr-2"></flux:icon>
                                     Delete Selected Files (<span x-text="selected.length"></span>)
@@ -381,6 +300,10 @@
         </flux:modal>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+    window.axios = axios; // optional, ensures global scope
+</script>
 <script>
 function uploadModal() {
     return {
@@ -449,23 +372,51 @@ function uploadModal() {
         },
 
         startUpload() {
-            if (this.files.length === 0){
+            if(this.files.length === 0){
                 this.errorMessage = 'No files selected.';
                 return;
             }
 
-            // Push files to global queue
-            Alpine.store('uploadQueue').addFiles(this.files);
+            // Push files to queue **and get their IDs**
+            const filesWithIds = this.files.map(file => {
+                const id = Date.now() + Math.random();
+                Alpine.store('uploadQueue').queue.push({
+                    id,
+                    name: file.name,
+                    progress: 0,
+                    status: 'Pending',
+                    file: file,
+                });
+                return { file, id }; // save id to use in upload
+            });
 
-            // Clear upload modal
+            Flux.modal('upload').close();
             this.files = [];
-
             this.errorMessage = '';
 
-            // Close the modal programmatically
-            Flux.modal('upload').close()
+            filesWithIds.forEach(({ file, id }) => {
+                const formData = new FormData();
+                formData.append('files[]', file);
+                formData.append('current_path', @json($path));
 
-            // Start actual upload (AJAX, Livewire, or Laravel Queue)
+                axios.post(`/storage/${@json($connection->id)}/upload`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                    onUploadProgress: (event) => {
+                        const percent = Math.round((event.loaded * 100) / event.total);
+                        Alpine.store('uploadQueue').updateProgress(id, percent);
+                    }
+                }).then(res => {
+                    Alpine.store('uploadQueue').updateStatus(id, res.data.success ? 'Success' : 'Failed');
+                }).catch(error => {
+                    let message = 'Failed';
+                    if(error.response && error.response.status === 422){
+                        if (error && error['files.0']) {
+                            message = error['files.0'][0];
+                        }
+                    }
+                    Alpine.store('uploadQueue').updateStatus(id, message);
+                });
+            });
         },
 
         preview(file) {
