@@ -88,30 +88,113 @@
                         </div>
                     @endforeach
                 </form>
-                <div x-data="fileSelector(@js($files))" @files-deleted.window="clearAll()" class="space-y-3" >
-                    <!-- Actions -->
-                    @if(!empty($files) && count($files) > 0)
-                        <div class="flex items-center gap-3 border-t">
-    
-                            <!-- Select / Deselect All -->
-                            <button type="button" @click="toggleSelectAll()" class="inline-flex items-center cursor-pointer mt-4 ">
-                                <flux:badge 
-                                    variant="pill" 
-                                    icon="layout-list"
-                                    x-text="allSelected ? 'Deselect All Files' : 'Select All Files'"
-                                ></flux:badge>
-                            </button>
-    
-                            <!-- Delete Selected Modal Trigger -->
-                            <flux:modal.trigger 
-                                name="delete-selected" 
-                                x-show="selected.length > 0"
-                                x-cloak
+            </ul>
+            @if(!empty($files) && count($files) > 0)
+                <h3 class="font-semibold mb-3">Files</h3>
+            @endif
+
+            <div 
+                x-data="fileSelector(@js($files))"
+                @files-deleted.window="clearAll()"
+                class="space-y-3"
+            >
+                <!-- Actions -->
+                @if(!empty($files) && count($files) > 0)
+                    <div class="flex items-center gap-3">
+
+                        <!-- Select / Deselect All -->
+                        <button type="button" @click="toggleSelectAll()" class="inline-flex items-center cursor-pointer">
+                            <flux:badge variant="pill" icon="file-check">
+                                <span x-text="allSelected ? 'Deselect All' : 'Select All'"></span>
+                            </flux:badge>
+                        </button>
+                        
+
+                        <!-- Delete Selected Modal Trigger -->
+                        <flux:modal.trigger 
+                            name="delete-selected" 
+                            x-show="selected.length > 0"
+                            x-cloak
+                        >
+                            <flux:badge
+                                variant="pill" 
+                                color="red"
+                                class="text-sm text-red-600 inline-flex items-center"
                             >
-                                <flux:badge
-                                    variant="pill" 
-                                    color="red"
-                                    class="text-sm text-red-600 inline-flex items-center mt-4"
+                                <flux:icon name="trash" class="w-4 h-4 mr-2"></flux:icon>
+                                Delete Selected (<span x-text="selected.length"></span>)
+                            </flux:badge>
+                        </flux:modal.trigger>
+
+                    </div>
+                @endif
+
+                <!-- File list -->
+                <ul class="divide-y divide-gray-200">
+                    @forelse($files as $file)
+                        @php
+                            $filePath = rtrim($path, '/') . '/' . basename($file);
+                            $fileUrl  = Storage::disk('connected_storage')->url($filePath);
+                        @endphp
+                    
+                        <li class="flex items-center justify-between py-2">
+                            <div class="flex items-center gap-3">
+                    
+                                <!-- ✅ Wrapper handles Alpine -->
+                                <div @click.stop="toggle('{{ $filePath }}')" class="cursor-pointer">
+                                    <flux:checkbox
+                                        :checked="false"
+                                        x-bind:checked="isSelected('{{ $filePath }}')"
+                                    />
+                                </div>
+                    
+                                <flux:icon name="file" class="w-5 h-5 text-gray-500"/>
+                    
+                                <a href="{{ $fileUrl }}"
+                                   target="_blank"
+                                   class="text-gray-700 hover:underline text-sm break-all">
+                                    {{ basename($file) }}
+                                </a>
+                            </div>
+                        </li>
+                    @empty
+                        <p class="flex items-center gap-2 text-zinc-500 py-3">
+                            <flux:icon name="file-minus" class="w-5 h-5"/>
+                            <span>Files in this folder are empty.</span>
+                        </p>
+                    @endforelse
+                </ul>
+                    
+                <!-- Delete Modal -->
+                <flux:modal name="delete-selected" class="min-w-[22rem]">
+                    <form method="POST" action="{{ route('storage.delete-files', $connection->id) }}">
+                        @csrf
+
+                        <!-- Hidden inputs for selected files -->
+                        <template x-for="file in selected" :key="file">
+                            <input type="hidden" name="files[]" x-for="file in selected" :key="file" :value="file">
+                        </template>
+
+                        <div class="space-y-6">
+                            <div>
+                                <flux:heading size="lg">Delete Selected Files?</flux:heading>
+
+                                <flux:text class="mt-2">
+                                    You're about to delete <strong x-text="selected.length"></strong> file(s).<br>
+                                    This action cannot be reversed.
+                                </flux:text>
+                            </div>
+
+                            <div class="flex gap-2">
+                                <flux:spacer />
+
+                                <flux:modal.close>
+                                    <flux:button variant="ghost" type="button">Cancel</flux:button>
+                                </flux:modal.close>
+
+                                <flux:button 
+                                    variant="danger" 
+                                    type="submit"
                                 >
                                     <flux:icon name="trash" class="w-4 h-4 mr-2"></flux:icon>
                                     Delete Selected Files (<span x-text="selected.length"></span>)
