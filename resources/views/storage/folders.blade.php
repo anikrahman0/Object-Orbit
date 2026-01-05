@@ -127,12 +127,12 @@
     
                     <!-- File list -->
                     <ul class="divide-y divide-gray-200">
+                            
                         @forelse($files as $file)
                             @php
-                                $filePath = rtrim($path, '/') . '/' . basename($file);
+                                $filePath = ltrim(rtrim($path, '/') . '/' . basename($file), '/');
                                 $fileUrl  = Storage::disk('connected_storage')->url($filePath);
                             @endphp
-    
                             <li class="flex items-center justify-between py-2">
                                 <div class="flex items-center gap-3">
     
