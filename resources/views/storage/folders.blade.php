@@ -57,7 +57,9 @@
             <div class="mb-4 gap-3 flex items-center">
                 {{-- <h2 class="font-semibold">Folders</h2> --}}
                 {{-- <flux:button size="sm" variant="filled"> <flux:icon name="layout-list" class="w-4 h-4"></flux:icon> Select All</flux:button> --}}
-                <flux:button size="sm" variant="filled"> <flux:icon name="folder" class="w-5 h-5"></flux:icon> Create Folder</flux:button>
+                <flux:modal.trigger name="folder-create">
+                    <flux:button size="sm" variant="filled"> <flux:icon name="folder" class="w-5 h-5"></flux:icon> Create Folder</flux:button>
+                </flux:modal.trigger>
                 <flux:modal.trigger name="upload">
                     <flux:button size="sm" variant="filled"> <flux:icon name="upload" class="w-5 h-5"></flux:icon> Upload Files</flux:button>
                 </flux:modal.trigger>
@@ -299,6 +301,57 @@
             </flux:modal>
         </flux:modal>
     </div>
+
+    <flux:modal name="folder-create" class="[:where(&)]:max-w-md [:where(&)]:w-full">
+        <div class="p-6 space-y-5">
+            <!-- Header -->
+            <div>
+                <h2 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+                    Create New Folder
+                </h2>
+                <p class="text-sm text-zinc-500">
+                    Folder will be created inside the current directory
+                </p>
+            </div>
+
+            <!-- Form -->
+            <form
+                method="POST"
+                action="{{ route('storage.create.folder', ['connectionId' => $connection->id]) }}"
+                class="space-y-4"
+            >
+                @csrf
+
+                <!-- Current Path -->
+                <input type="hidden" name="current_path" value="{{ $path }}">
+
+                <!-- Folder Name -->
+                <flux:input
+                    type="text"
+                    name="folder_name"
+                    placeholder="New folder name"
+                    required
+                    maxlength="255"
+                    autofocus
+                />
+
+                <!-- Footer -->
+                <div class="flex justify-end gap-2 pt-3 border-t border-zinc-200 dark:border-zinc-700">
+                    <flux:modal.close>
+                        <flux:button variant="ghost" type="reset">
+                            Cancel
+                        </flux:button>
+                    </flux:modal.close>
+
+                    <flux:button icon="plus" type="submit" variant="primary">
+                        <span>Create</span>
+                    </flux:button>
+                </div>
+            </form>
+        </div>
+    </flux:modal>
+
+
 </div>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script>
