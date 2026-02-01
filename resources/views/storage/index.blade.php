@@ -52,7 +52,7 @@
                                     </flux:button>
 
                                     <!-- Connect Button -->
-                                    <flux:button size="sm" variant="primary" icon="link" href="{{ route('storage.connect', $storage->id) }}"  wire:navigate>
+                                    <flux:button size="sm" variant="primary" icon="link" href="{{ route('storage.connect', $storage->id) }}">
                                         <span>Connect</span>
                                     </flux:button>
                                 </div>
