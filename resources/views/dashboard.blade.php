@@ -4,7 +4,7 @@
             <div class="relative aspect-video overflow-hidden rounded-xl border  p-6 flex flex-col justify-between bg-zinc-50 dark:bg-zinc-900 shadow-sm hover:shadow-md transition">
                 <div class="flex items-center gap-4">
                     
-                    <span class="flex h-20 w-20 items-center justify-center rounded-xl bg-gradient-to-br from-light-500 to-light-600 bg-accent text-white shadow">
+                    <span class="flex h-20 w-20 items-center justify-center rounded-xl bg-gradient-to-br from-light-500 to-light-600 bg-accent text-gray-400 shadow">
                         <!-- Storage Connection Icon -->
                         <flux:icon name="database" class="size-10" />
                     </span>
