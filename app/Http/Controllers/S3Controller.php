@@ -278,4 +278,43 @@ class S3Controller extends Controller
             return back()->with('error', 'Failed to delete files: ' . $e->getMessage());
         }
     }
+
+    public function deleteItems($id, Request $request, StorageConnectionService $service)
+    {
+        $files = $request->input('files', []);
+        $folders = $request->input('folders', []);
+
+        if (empty($files) && empty($folders)) {
+            return back()->with('error', 'No items selected for deletion.');
+        }
+
+        $connection = auth()->user()->storageConnection()->findOrFail($id);
+        $service->registerDisk($connection->toArray(), 'connected_storage');
+        $disk = Storage::disk('connected_storage');
+
+        try {
+            // Delete files
+            foreach ($files as $filePath) {
+                if ($disk->exists($filePath)) {
+                    $disk->delete($filePath);
+                }
+            }
+
+            // Delete folders
+            foreach ($folders as $folderPath) {
+                $filesInFolder = $disk->allFiles($folderPath);
+                $disk->delete($filesInFolder);
+
+                $directories = $disk->allDirectories($folderPath);
+                foreach ($directories as $dir) {
+                    $disk->deleteDirectory($dir);
+                }
+                $disk->deleteDirectory($folderPath);
+            }
+
+            return back()->with('success', 'Selected items deleted successfully.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to delete items: ' . $e->getMessage());
+        }
+    }
 }
